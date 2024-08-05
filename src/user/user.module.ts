@@ -1,17 +1,15 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { UserController } from "./user.controller";
-import { UserService } from "./user.service";
-import { User, UserSchema } from "./user.model";
+import { Geofence, GeofenceSchema } from "src/geoFence/geofence.model";
+import { MailerService } from "src/mail/mailer.service";
+import { Roles, RolesSchema } from "src/roles/roles.model";
 import {
   Organization,
   OrganizationSchema,
 } from "../organization/organization.model";
-import { Roles, RolesSchema } from "src/roles/roles.model";
-import { MailerService } from "src/mail/mailer.service";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
-import { FirebaseModule } from "src/fireBaseAuth/firebase.module";
-import { Geofence, GeofenceSchema } from "src/geoFence/geofence.model";
+import { UserController } from "./user.controller";
+import { User, UserSchema } from "./user.model";
+import { UserService } from "./user.service";
 
 @Module({
   imports: [
@@ -21,9 +19,8 @@ import { Geofence, GeofenceSchema } from "src/geoFence/geofence.model";
       { name: Roles.name, schema: RolesSchema },
       { name: Geofence.name, schema: GeofenceSchema },
     ]),
-    FirebaseModule,
   ],
   controllers: [UserController],
-  providers: [UserService, MailerService, FirebaseService],
+  providers: [UserService, MailerService],
 })
 export class UserModule {}

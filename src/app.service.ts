@@ -1,23 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { Bucket, BucketDocument } from "./bucket/bucket.model";
-import { OrganizationService } from "./organization/organization.service";
 // import * as turf from '@turf/turf';
 
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 import {
   Organization,
   OrganizationDocument,
 } from "src/organization/organization.model";
+import { Alert } from "./alert/alert.model";
+import { MailerService } from "./mail/mailer.service";
 import {
   TrackableTransport,
   TrackableTransportDocument,
 } from "./Trackable_Transport/trackable_transport.model";
-import { InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
 import { User, UserDocument } from "./user/user.model";
-import { Alert } from "./alert/alert.model";
-import { MailerService } from "./mail/mailer.service";
 
-import { Geofence, GeofenceDocument } from "./geoFence/geofence.model";
 import {
   Notification,
   NotificationDocument,
@@ -38,8 +36,8 @@ export class AppService {
     private readonly mailerService: MailerService,
   ) {}
 
-  getHello(): string {
-    return "Hello World!";
+  getHello(): any {
+    return { message: "Hello World!" };
   }
 
   // comman function
@@ -335,7 +333,7 @@ export class AppService {
     alertId: string,
   ): Promise<void> {
     try {
-      const result = await this.userModel.updateOne(
+      await this.userModel.updateOne(
         {
           _id: uid,
           toi: {
@@ -371,7 +369,7 @@ export class AppService {
     alertId: string,
   ): Promise<void> {
     try {
-      const result = await this.userModel.updateOne(
+      await this.userModel.updateOne(
         {
           _id: uid,
           toi: {

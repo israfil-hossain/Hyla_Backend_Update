@@ -16,7 +16,6 @@ import {
   TrackableTransportDocument,
 } from "src/Trackable_Transport/trackable_transport.model";
 import { Bucket, BucketDocument } from "src/bucket/bucket.model";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
 import { MailerService } from "src/mail/mailer.service";
 import { Roles, RolesDocument } from "src/roles/roles.model";
 import { Voyage, VoyageDocument } from "src/voyage/voyage.model";
@@ -24,10 +23,12 @@ import { User, UserDocument } from "../user/user.model";
 import { CreateOrganizationDto } from "./dto/organization.dto";
 import { UpdateOrganizationDto } from "./dto/update-organization.dto";
 import { Organization, OrganizationDocument } from "./organization.model";
+
 interface PaginatedOrganizations {
   organizations: Organization[];
   totalCount: number;
 }
+
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -42,7 +43,6 @@ export class OrganizationService {
     @InjectModel(TrackableTransport.name)
     private trackableTransportModel: Model<TrackableTransportDocument>,
     private readonly mailerService: MailerService,
-    private readonly firebaseService: FirebaseService,
   ) {}
 
   async fetchDataFromAIS(imo: any): Promise<any> {
@@ -103,6 +103,7 @@ export class OrganizationService {
     const { name, ownerName, email, password } = createOrganizationDto;
 
     const reqUser = await this.userModel.findById(uid).exec();
+
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
     }
@@ -184,12 +185,6 @@ export class OrganizationService {
       });
     }
 
-    await this.mailerService.sendWelcomeEmailToOrganization(
-      email,
-      name,
-      ownerName,
-      password,
-    );
     const savedOrganization = await createdOrganization.save();
 
     if (!savedOrganization) {
@@ -198,6 +193,14 @@ export class OrganizationService {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    await this.mailerService.sendWelcomeEmailToOrganization(
+      email,
+      name,
+      ownerName,
+      password,
+    );
+
     return savedOrganization;
   }
 

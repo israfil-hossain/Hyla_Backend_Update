@@ -8,7 +8,6 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import mongoose, { Model, Schema as MongooseSchema } from "mongoose";
 import { EncryptionService } from "src/encryption/encryption.service";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
 import { Geofence, GeofenceDocument } from "src/geoFence/geofence.model";
 import { Roles, RolesDocument } from "src/roles/roles.model";
 import {
@@ -27,7 +26,6 @@ export class UserService {
     @InjectModel(Roles.name) private readonly rolesModel: Model<RolesDocument>,
     @InjectModel(Geofence.name)
     private readonly geoModel: Model<GeofenceDocument>,
-    private readonly firebaseService: FirebaseService,
     private readonly encryptionService: EncryptionService,
   ) {}
 
@@ -178,33 +176,19 @@ export class UserService {
 
     const reqUser = await this.userModel.findById(uid).exec();
 
-    // if (!reqUser) {
-    //   throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
-    // }
+    if (!reqUser) {
+      throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
+    }
 
-    // Check if email is registered in Firebase
-    // const userRecord = await admin
-    //   .auth()
-    //   .getUserByEmail(email)
-    //   .catch(() => null);
+    const checkUserIsOrganizationOwner = await this.organizationModel
+      .findOne({ _id: reqUser.organization })
+      .exec();
 
-    // let firebaseUid: string;
-
-    // if (userRecord) {
-    //   firebaseUid = userRecord.uid;
-    // } else {
-    //   firebaseUid = await this.firebaseService.createUser(email, password);
-    // }
-
-    // const checkUserIsOrganizationOwner = await this.organizationModel
-    //   .findOne({ _id: reqUser.organization })
-    //   .exec();
-
-    // if (!checkUserIsOrganizationOwner) {
-    //   throw new NotFoundException(
-    //     "This user is not the owner of any organization",
-    //   );
-    // }
+    if (!checkUserIsOrganizationOwner) {
+      throw new NotFoundException(
+        "This user is not the owner of any organization",
+      );
+    }
 
     const existingUser = await this.userModel.findOne({ email }).exec();
 

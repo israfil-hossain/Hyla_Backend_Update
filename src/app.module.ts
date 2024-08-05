@@ -15,7 +15,6 @@ import { BucketModule } from "./bucket/bucket.module";
 import { BucketService } from "./bucket/bucket.service";
 import { jwtConfig } from "./config/jwt.config";
 import { EncryptionModule } from "./encryption/encryption.module";
-import { FirebaseModule } from "./fireBaseAuth/firebase.module";
 import { Geofence, GeofenceSchema } from "./geoFence/geofence.model";
 import { GeofenceModule } from "./geoFence/geofence.modules";
 import { GeofenceService } from "./geoFence/geofence.service";
@@ -70,7 +69,6 @@ import { VoyageModule } from "./voyage/voyage.module";
     ]),
 
     AuthenticationModule,
-    FirebaseModule,
     UserModule,
     OrganizationModule,
     RolesModule,

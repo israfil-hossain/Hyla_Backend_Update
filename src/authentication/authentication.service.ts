@@ -101,7 +101,7 @@ export class AuthenticationService {
     }
   }
 
-  async revokeRefreshToken(refreshToken: string): Promise<string> {
+  async revokeRefreshToken(refreshToken: string): Promise<any> {
     try {
       const refreshTokenDoc = await this.refreshTokenModel
         .findOne({
@@ -128,7 +128,7 @@ export class AuthenticationService {
         )
         .exec();
 
-      return "Refresh token revoked successfully";
+      return { message: "Refresh token revoked successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
@@ -140,7 +140,7 @@ export class AuthenticationService {
   async changePassword(
     changePasswordDto: ChangePasswordDto,
     userId: string,
-  ): Promise<string> {
+  ): Promise<any> {
     try {
       if (changePasswordDto.oldPassword === changePasswordDto.newPassword) {
         throw new BadRequestException(
@@ -185,7 +185,7 @@ export class AuthenticationService {
         throw new BadRequestException("Could not update password");
       }
 
-      return "Password changed successfully";
+      return { message: "Password changed successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
@@ -194,7 +194,7 @@ export class AuthenticationService {
     }
   }
 
-  async forgotPassword(forgotDto: ForgotPasswordDto): Promise<string> {
+  async forgotPassword(forgotDto: ForgotPasswordDto): Promise<any> {
     const user = await this.userModel
       .findOne({ email: forgotDto.email })
       .exec();
@@ -211,10 +211,10 @@ export class AuthenticationService {
 
     await this.mailerService.sendPasswordResetEmail(user.email, resetToken);
 
-    return "Password reset email sent";
+    return { message: "Password reset email sent" };
   }
 
-  async resetForgotPassword(resetDto: ResetForgotPasswordDto): Promise<string> {
+  async resetForgotPassword(resetDto: ResetForgotPasswordDto): Promise<any> {
     const userId = this.encryptionService.decryptTimestampToken(
       resetDto.resetToken,
     );
@@ -243,7 +243,7 @@ export class AuthenticationService {
       throw new BadRequestException("Could not update password");
     }
 
-    return "Password changed successfully";
+    return { message: "Password changed successfully" };
   }
 
   //#region Private Helper Methods

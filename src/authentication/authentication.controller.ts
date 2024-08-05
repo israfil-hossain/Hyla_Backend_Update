@@ -24,7 +24,7 @@ export class AuthenticationController {
 
   @Get("verifyToken")
   verifyToken() {
-    return "Token verification succeeded.";
+    return { message: "Token verification succeeded." };
   }
 
   @Post("tokenRefresh")

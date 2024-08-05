@@ -2,22 +2,18 @@
 
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Organization, OrganizationSchema } from "./organization.model";
-import { OrganizationService } from "./organization.service";
-import { OrganizationController } from "./organization.controller";
-import { User, UserSchema } from "../user/user.model";
+import { Bucket, BucketSchema } from "src/bucket/bucket.model";
 import { MailerService } from "src/mail/mailer.service";
 import { Roles, RolesSchema } from "src/roles/roles.model";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
-import { FirebaseModule } from "src/fireBaseAuth/firebase.module";
 import {
   TrackableTransport,
   TrackableTransportSchema,
 } from "src/Trackable_Transport/trackable_transport.model";
-import { Bucket, BucketSchema } from "src/bucket/bucket.model";
-import { BucketModule } from "src/bucket/bucket.module";
-import { BucketService } from "src/bucket/bucket.service";
 import { Voyage, VoyageSchema } from "src/voyage/voyage.model";
+import { User, UserSchema } from "../user/user.model";
+import { OrganizationController } from "./organization.controller";
+import { Organization, OrganizationSchema } from "./organization.model";
+import { OrganizationService } from "./organization.service";
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -28,9 +24,8 @@ import { Voyage, VoyageSchema } from "src/voyage/voyage.model";
       { name: TrackableTransport.name, schema: TrackableTransportSchema },
       { name: Voyage.name, schema: VoyageSchema },
     ]),
-    FirebaseModule,
   ],
-  providers: [OrganizationService, MailerService, FirebaseService],
+  providers: [OrganizationService, MailerService],
   controllers: [OrganizationController],
   exports: [OrganizationService],
 })

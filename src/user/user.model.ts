@@ -11,9 +11,6 @@ import { Roles } from "src/roles/roles.model";
   },
 })
 export class User {
-  // @Prop({ required: true, unique: true })
-  // idp_id: string;
-
   @Prop({ required: true, unique: true })
   email: string;
 
@@ -22,9 +19,6 @@ export class User {
 
   @Prop({ required: true })
   name: string;
-
-  // @Prop({ required: true, default: "firebase" })
-  // idp_provider: string;
 
   @Prop()
   fcm_token: string;

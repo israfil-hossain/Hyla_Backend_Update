@@ -1,23 +1,19 @@
 // trackable-transport.controller.ts
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-  Query,
-  BadRequestException,
-  InternalServerErrorException,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
+  Param,
+  Post,
+  Query,
 } from "@nestjs/common";
-import { TrackableTransportService } from "./trackable_transport.service";
-import { TrackableTransport } from "./trackable_transport.model";
-import { FirebaseAuthGuard } from "src/fireBaseAuth/FirebaseAuthGuard";
 import { ApiTags } from "@nestjs/swagger";
+import { TrackableTransport } from "./trackable_transport.model";
+import { TrackableTransportService } from "./trackable_transport.service";
 
 @ApiTags("Track Transports")
 @Controller("trackable-transports")
@@ -52,7 +48,6 @@ export class TrackableTransportController {
   }
 
   @Get("getAll")
-  @UseGuards(FirebaseAuthGuard)
   async findAll(@Query() query: any): Promise<any> {
     try {
       const organizations = await this.trackableTransportService.findAll(query);

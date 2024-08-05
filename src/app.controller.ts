@@ -6,7 +6,7 @@ import { IsPublic } from "./authentication/guard/authentication.guard";
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
+  @Get("hello")
   @IsPublic()
   getHello(): string {
     return this.appService.getHello();

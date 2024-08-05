@@ -3,7 +3,9 @@ import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { AuthenticationService } from "./authentication.service";
 import { RequestUser } from "./decorator/request-user.decorator";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
+import { ResetForgotPasswordDto } from "./dto/reset-forgot-password.dto";
 import { SignInDto } from "./dto/sign-in.dto";
 import { IsPublic } from "./guard/authentication.guard";
 
@@ -40,6 +42,22 @@ export class AuthenticationController {
     return this.authService.revokeRefreshToken(tokenRefreshDto.refreshToken);
   }
 
+  @Post("forgotPassword")
+  @HttpCode(200)
+  @IsPublic()
+  @ApiBody({ type: ForgotPasswordDto })
+  forgotPassword(@Body() forgotDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotDto);
+  }
+
+  @Post("resetForgotPassword")
+  @HttpCode(200)
+  @IsPublic()
+  @ApiBody({ type: ResetForgotPasswordDto })
+  resetForgotPassword(@Body() resetDto: ResetForgotPasswordDto) {
+    return this.authService.resetForgotPassword(resetDto);
+  }
+
   @Post("changePassword")
   @HttpCode(200)
   @ApiBody({ type: ChangePasswordDto })
@@ -48,12 +66,5 @@ export class AuthenticationController {
     @RequestUser() { userId }: ITokenPayload,
   ) {
     return this.authService.changePassword(changePasswordDto, userId);
-  }
-
-  @Post("forgot-password")
-  @HttpCode(200)
-  async forgotPassword(@Body("email") email: string): Promise<void> {
-    console.log(email);
-    await this.authService.forgotPassword(email);
   }
 }

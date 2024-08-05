@@ -10,16 +10,18 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { MailerService } from "src/mail/mailer.service";
 import { User, UserDocument } from "src/user/user.model";
 import { EncryptionService } from "../encryption/encryption.service";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
+import { ResetForgotPasswordDto } from "./dto/reset-forgot-password.dto";
 import { SignInDto } from "./dto/sign-in.dto";
 import { TokenResponseDto } from "./dto/token-response.dto";
 import {
   RefreshToken,
   RefreshTokenDocument,
 } from "./entities/refresh-token.entity";
-import { MailerService } from "src/mail/mailer.service";
 
 @Injectable()
 export class AuthenticationService {
@@ -168,7 +170,7 @@ export class AuthenticationService {
         changePasswordDto.newPassword,
       );
 
-      await this.userModel
+      const updatedUser = await this.userModel
         .findOneAndUpdate(
           {
             _id: user._id,
@@ -179,6 +181,10 @@ export class AuthenticationService {
         )
         .exec();
 
+      if (!updatedUser) {
+        throw new BadRequestException("Could not update password");
+      }
+
       return "Password changed successfully";
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -188,8 +194,11 @@ export class AuthenticationService {
     }
   }
 
-  async forgotPassword(email: string): Promise<void> {
-    const user = await this.userModel.findOne({ email }).exec();
+  async forgotPassword(forgotDto: ForgotPasswordDto): Promise<string> {
+    const user = await this.userModel
+      .findOne({ email: forgotDto.email })
+      .exec();
+
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -200,10 +209,44 @@ export class AuthenticationService {
       expiryTime,
     );
 
-    await this.mailerService.sendPasswordResetEmail(email, resetToken);
+    await this.mailerService.sendPasswordResetEmail(user.email, resetToken);
+
+    return "Password reset email sent";
   }
 
-  // Private Helper Methods
+  async resetForgotPassword(resetDto: ResetForgotPasswordDto): Promise<string> {
+    const userId = this.encryptionService.decryptTimestampToken(
+      resetDto.resetToken,
+    );
+
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const hashedPassword = await this.encryptionService.hashPassword(
+      resetDto.newPassword,
+    );
+
+    const updatedUser = await this.userModel
+      .findOneAndUpdate(
+        {
+          _id: user._id,
+        },
+        {
+          password: hashedPassword,
+        },
+      )
+      .exec();
+
+    if (!updatedUser) {
+      throw new BadRequestException("Could not update password");
+    }
+
+    return "Password changed successfully";
+  }
+
+  //#region Private Helper Methods
   private async generateAccessToken(userData: UserDocument) {
     try {
       if (!userData?._id || !userData?.email) {
@@ -239,4 +282,5 @@ export class AuthenticationService {
       throw new InternalServerErrorException("Error generating refresh token");
     }
   }
+  //#endregion
 }

@@ -3,7 +3,6 @@ import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
 import { jwtConfig } from "src/config/jwt.config";
-import { EncryptionModule } from "src/encryption/encryption.module";
 import { User, UserSchema } from "src/user/user.model";
 import { AuthenticationController } from "./authentication.controller";
 import { AuthenticationService } from "./authentication.service";
@@ -21,7 +20,6 @@ import { AuthenticationGuardProvider } from "./guard/authentication.guard";
     ]),
     JwtModule.registerAsync(jwtConfig),
     ConfigModule,
-    EncryptionModule,
   ],
   controllers: [AuthenticationController],
   providers: [AuthenticationGuardProvider, AuthenticationService],

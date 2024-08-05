@@ -21,7 +21,7 @@ export class VoyageService {
   ) {}
 
   async create(uid: string, voyage: Voyage): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
 
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
@@ -47,7 +47,7 @@ export class VoyageService {
 
   async findAll(uid: string): Promise<any> {
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -62,7 +62,7 @@ export class VoyageService {
       const parsedPageSize = parseInt(pageSize);
 
       const reqUser = await this.userModel
-        .findOne({ idp_id: uid })
+        .findById(uid)
         .populate("organization")
         .exec();
 

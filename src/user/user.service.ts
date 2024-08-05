@@ -6,20 +6,20 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Schema as MongooseSchema } from "mongoose";
-import { User, UserDocument } from "./user.model";
-import { CreateUserDto } from "./dto/user.dto";
+import * as admin from "firebase-admin";
+import mongoose, { Model, Schema as MongooseSchema } from "mongoose";
+import { EncryptionService } from "src/encryption/encryption.service";
+import { FirebaseService } from "src/fireBaseAuth/firbase.services";
+import { Geofence, GeofenceDocument } from "src/geoFence/geofence.model";
+import { Roles, RolesDocument } from "src/roles/roles.model";
+import { MailerService } from "../mail/mailer.service";
 import {
   Organization,
   OrganizationDocument,
 } from "../organization/organization.model";
-import { Roles, RolesDocument } from "src/roles/roles.model";
-import { MailerService } from "../mail/mailer.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
-import mongoose from "mongoose";
-import * as admin from "firebase-admin";
-import { Geofence, GeofenceDocument } from "src/geoFence/geofence.model";
+import { CreateUserDto } from "./dto/user.dto";
+import { User, UserDocument } from "./user.model";
 @Injectable()
 export class UserService {
   constructor(
@@ -31,6 +31,7 @@ export class UserService {
     private readonly geoModel: Model<GeofenceDocument>,
     private readonly mailerService: MailerService,
     private readonly firebaseService: FirebaseService,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   async createSuper(createUserDto: CreateUserDto): Promise<User> {
@@ -40,11 +41,6 @@ export class UserService {
     if (existingUser) {
       throw new ConflictException("Email already exists");
     }
-
-    const firebaseUid = await this.firebaseService.createUser(
-      createUserDto.email,
-      createUserDto.password,
-    );
 
     const userPermissions: Record<string, string> = {};
 
@@ -71,18 +67,18 @@ export class UserService {
     }
 
     const createdUser = new this.userModel({
-      idp_id: firebaseUid,
       name,
       email,
       roles,
       permissions: userPermissions,
     });
-    return createdUser.save();
+
+    return await createdUser.save();
   }
 
   async findById(userId: string): Promise<User | null> {
     const user = await this.userModel
-      .findOne({ idp_id: userId })
+      .findById(userId)
       .populate("organization")
       .populate({
         path: "toi.transportId",
@@ -109,8 +105,8 @@ export class UserService {
     return user || null;
   }
 
-  async checkIfUserIsSuperUser(idpId: string): Promise<boolean> {
-    const user = await this.userModel.findOne({ idp_id: idpId }).exec();
+  async checkIfUserIsSuperUser(userId: string): Promise<boolean> {
+    const user = await this.userModel.findById(userId).exec();
 
     if (!user) {
       throw new NotFoundException("User not found");
@@ -121,7 +117,7 @@ export class UserService {
 
   async getAllUsers(uid: string): Promise<User[]> {
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -151,7 +147,7 @@ export class UserService {
     const skip = (page - 1) * pageSize;
 
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -181,37 +177,37 @@ export class UserService {
   }
 
   async createUser(uid: string, createUserDto: CreateUserDto): Promise<User> {
-    const { name, email, roles, password } = createUserDto;
+    const { name = "", email = "", password = "", roles = [] } = createUserDto;
 
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
 
-    if (!reqUser) {
-      throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
-    }
+    // if (!reqUser) {
+    //   throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
+    // }
 
     // Check if email is registered in Firebase
-    const userRecord = await admin
-      .auth()
-      .getUserByEmail(email)
-      .catch(() => null);
+    // const userRecord = await admin
+    //   .auth()
+    //   .getUserByEmail(email)
+    //   .catch(() => null);
 
-    let firebaseUid: string;
+    // let firebaseUid: string;
 
-    if (userRecord) {
-      firebaseUid = userRecord.uid;
-    } else {
-      firebaseUid = await this.firebaseService.createUser(email, password);
-    }
+    // if (userRecord) {
+    //   firebaseUid = userRecord.uid;
+    // } else {
+    //   firebaseUid = await this.firebaseService.createUser(email, password);
+    // }
 
-    const checkUserIsOrganizationOwner = await this.organizationModel
-      .findOne({ _id: reqUser.organization })
-      .exec();
+    // const checkUserIsOrganizationOwner = await this.organizationModel
+    //   .findOne({ _id: reqUser.organization })
+    //   .exec();
 
-    if (!checkUserIsOrganizationOwner) {
-      throw new NotFoundException(
-        "This user is not the owner of any organization",
-      );
-    }
+    // if (!checkUserIsOrganizationOwner) {
+    //   throw new NotFoundException(
+    //     "This user is not the owner of any organization",
+    //   );
+    // }
 
     const existingUser = await this.userModel.findOne({ email }).exec();
 
@@ -246,23 +242,26 @@ export class UserService {
       }
     }
 
+    const hashedPassword = await this.encryptionService.hashPassword(password);
+
     const createdUser = new this.userModel({
-      idp_id: firebaseUid,
       name,
       email,
-      organization: reqUser.organization,
+      password: hashedPassword,
+      // organization: reqUser.organization,
       created_by: reqUser?._id,
       roles,
       permissions: userPermissions,
     });
 
-    await this.mailerService.sendWelcomeEmail(
-      createdUser.email,
-      createdUser.name,
-      checkUserIsOrganizationOwner.name,
-      password,
-    );
     const newData = await createdUser.save();
+
+    // await this.mailerService.sendWelcomeEmail(
+    //   createdUser.email,
+    //   createdUser.name,
+    //   checkUserIsOrganizationOwner.name,
+    //   password,
+    // );
 
     if (!newData) {
       throw new HttpException(
@@ -280,7 +279,7 @@ export class UserService {
   ): Promise<User> {
     const { name, roles } = updateUserDto;
 
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
     if (!reqUser) {
       throw new HttpException("User not found.", HttpStatus.BAD_REQUEST);
     }
@@ -366,7 +365,7 @@ export class UserService {
   async updateToi(uid: string, transport: Record<string, any>): Promise<any> {
     const result = await this.userModel
       .updateOne(
-        { idp_id: uid, "toi.transportId": { $ne: transport[0] } },
+        { _id: uid, "toi.transportId": { $ne: transport[0] } },
         { $push: { toi: { transportId: transport[0] } } },
       )
       .exec();
@@ -388,7 +387,7 @@ export class UserService {
   ): Promise<any> {
     await this.userModel
       .updateOne(
-        { idp_id: uid, "toi.transportId": transport[0] },
+        { _id: uid, "toi.transportId": transport[0] },
         { $set: { "toi.$.isSelected": isSelected } },
       )
       .exec();
@@ -408,7 +407,7 @@ export class UserService {
 
       await this.userModel.updateOne(
         {
-          idp_id: uid,
+          _id: uid,
           toi: {
             $elemMatch: {
               transportId: transport,
@@ -452,7 +451,7 @@ export class UserService {
 
     await this.userModel.updateOne(
       {
-        idp_id: uid,
+        _id: uid,
         toi: {
           $elemMatch: {
             transportId: transport,
@@ -479,7 +478,7 @@ export class UserService {
   async removeFromToi(uid: string, transportId: string): Promise<any> {
     const result = await this.userModel
       .updateOne(
-        { idp_id: uid, "toi._id": transportId },
+        { _id: uid, "toi._id": transportId },
         { $pull: { toi: { _id: transportId } } },
       )
       .exec();
@@ -501,7 +500,7 @@ export class UserService {
   ): Promise<any> {
     const result = await this.userModel
       .updateOne(
-        { idp_id: uid, "toi._id": transportId },
+        { _id: uid, "toi._id": transportId },
         { $pull: { "toi.$.alerts": { alertId: alertId } } },
       )
       .exec();
@@ -523,7 +522,7 @@ export class UserService {
   ): Promise<any> {
     const result = await this.userModel
       .updateOne(
-        { idp_id: uid, "toi._id": transportId },
+        { _id: uid, "toi._id": transportId },
         { $pull: { "toi.$.geofences": { geoId: geoId } } },
       )
       .exec();
@@ -553,7 +552,7 @@ export class UserService {
     hiddenColumns: string[],
     visibleColumnsOrder: string[],
   ): Promise<User | null> {
-    const user = await this.userModel.findOne({ idp_id: userId }).exec();
+    const user = await this.userModel.findById(userId).exec();
 
     if (!user) {
       throw new NotFoundException("User not found");
@@ -577,7 +576,7 @@ export class UserService {
 
   async getFilterField(uid: any): Promise<User | null> {
     console.log(uid);
-    const UserData = await this.userModel.findOne({ idp_id: uid }).exec();
+    const UserData = await this.userModel.findById(uid).exec();
 
     if (!UserData) {
       throw new HttpException(

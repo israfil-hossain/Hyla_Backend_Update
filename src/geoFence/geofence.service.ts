@@ -6,10 +6,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { Model, ObjectId } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
-import { Geofence, GeofenceDocument } from "./geofence.model";
+import { Model, ObjectId } from "mongoose";
 import { User, UserDocument } from "src/user/user.model";
+import { Geofence, GeofenceDocument } from "./geofence.model";
 interface PaginatedOrganizations {
   data: Geofence[];
   totalCount: number;
@@ -22,7 +22,7 @@ export class GeofenceService {
   ) {}
 
   async create(uid: string, geofence: Geofence): Promise<Geofence> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
 
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
@@ -58,7 +58,7 @@ export class GeofenceService {
 
   async findAll(uid: string): Promise<any> {
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -67,7 +67,7 @@ export class GeofenceService {
 
   async getAll(uid: string): Promise<any> {
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -97,7 +97,7 @@ export class GeofenceService {
 
   async update(uid: string, id: string, geofence: Geofence): Promise<Geofence> {
     try {
-      const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+      const reqUser = await this.userModel.findById(uid).exec();
 
       if (!reqUser) {
         throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
@@ -154,7 +154,7 @@ export class GeofenceService {
     geofence: Geofence,
   ): Promise<Geofence> {
     try {
-      const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+      const reqUser = await this.userModel.findById(uid).exec();
 
       if (!reqUser) {
         throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
@@ -205,7 +205,7 @@ export class GeofenceService {
       const parsedPageSize = parseInt(pageSize);
 
       const reqUser = await this.userModel
-        .findOne({ idp_id: uid })
+        .findById(uid)
         .populate("organization")
         .exec();
 

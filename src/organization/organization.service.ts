@@ -1,4 +1,5 @@
 // organization.service.ts
+import { faker } from "@faker-js/faker";
 import {
   BadRequestException,
   HttpException,
@@ -8,27 +9,25 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import axios from "axios";
 import { Model } from "mongoose";
-import { Organization, OrganizationDocument } from "./organization.model";
-import { CreateOrganizationDto } from "./dto/organization.dto";
-import { User, UserDocument } from "../user/user.model";
-import { MailerService } from "src/mail/mailer.service";
-import { Roles, RolesDocument } from "src/roles/roles.model";
-import { UpdateOrganizationDto } from "./dto/update-organization.dto";
-import { FirebaseService } from "src/fireBaseAuth/firbase.services";
-interface PaginatedOrganizations {
-  organizations: Organization[];
-  totalCount: number;
-}
-import * as admin from "firebase-admin";
 import {
   TrackableTransport,
   TrackableTransportDocument,
 } from "src/Trackable_Transport/trackable_transport.model";
 import { Bucket, BucketDocument } from "src/bucket/bucket.model";
-import axios from "axios";
-import { faker } from "@faker-js/faker";
+import { FirebaseService } from "src/fireBaseAuth/firbase.services";
+import { MailerService } from "src/mail/mailer.service";
+import { Roles, RolesDocument } from "src/roles/roles.model";
 import { Voyage, VoyageDocument } from "src/voyage/voyage.model";
+import { User, UserDocument } from "../user/user.model";
+import { CreateOrganizationDto } from "./dto/organization.dto";
+import { UpdateOrganizationDto } from "./dto/update-organization.dto";
+import { Organization, OrganizationDocument } from "./organization.model";
+interface PaginatedOrganizations {
+  organizations: Organization[];
+  totalCount: number;
+}
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -103,23 +102,9 @@ export class OrganizationService {
   ): Promise<Organization> {
     const { name, ownerName, email, password } = createOrganizationDto;
 
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
-    }
-
-    // Check if email is registered in Firebase
-    const userRecord = await admin
-      .auth()
-      .getUserByEmail(email)
-      .catch(() => null);
-
-    let firebaseUid: string;
-
-    if (userRecord) {
-      firebaseUid = userRecord.uid;
-    } else {
-      firebaseUid = await this.firebaseService.createUser(email, password);
     }
 
     const existingOrganization = await this.organizationModel
@@ -170,7 +155,6 @@ export class OrganizationService {
     const user = new this.userModel({
       name: ownerName,
       email,
-      idp_id: firebaseUid,
       created_by: reqUser?._id,
       roles,
       isOrganizationOwner: true,

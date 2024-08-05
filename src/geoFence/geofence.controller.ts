@@ -1,28 +1,30 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
+  InternalServerErrorException,
+  Param,
   Post,
   Put,
-  Param,
-  Body,
-  Req,
-  BadRequestException,
   Query,
-  InternalServerErrorException,
 } from "@nestjs/common";
-import { GeofenceService } from "./geofence.service";
-import { Geofence } from "./geofence.model";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { Geofence } from "./geofence.model";
+import { GeofenceService } from "./geofence.service";
 @ApiTags("GeoFences")
 @Controller("geofences")
 export class GeofenceController {
   constructor(private readonly geofenceService: GeofenceService) {}
 
   @Post()
-  async create(@Req() req, @Body() geofence: Geofence): Promise<any> {
-    const uid = req.user?.uid;
+  async create(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() geofence: Geofence,
+  ): Promise<any> {
     try {
-      const data = this.geofenceService.create(uid, geofence);
+      const data = this.geofenceService.create(userId, geofence);
       return {
         success: true,
         data: data,
@@ -35,10 +37,12 @@ export class GeofenceController {
   }
 
   @Get("getAllPagination")
-  async getAllPagination(@Req() req, @Query() query: any): Promise<any> {
+  async getAllPagination(
+    @RequestUser() { userId }: ITokenPayload,
+    @Query() query: any,
+  ): Promise<any> {
     try {
-      const uid = req.user?.uid;
-      const data = await this.geofenceService.getAllPagination(uid, query);
+      const data = await this.geofenceService.getAllPagination(userId, query);
       return data;
     } catch (error) {
       if (
@@ -55,15 +59,13 @@ export class GeofenceController {
   }
 
   @Get()
-  findAll(@Req() req) {
-    const uid = req.user?.uid;
-    return this.geofenceService.findAll(uid);
+  findAll(@RequestUser() { userId }: ITokenPayload) {
+    return this.geofenceService.findAll(userId);
   }
 
   @Get("getAll")
-  getAll(@Req() req) {
-    const uid = req.user?.uid;
-    return this.geofenceService.getAll(uid);
+  getAll(@RequestUser() { userId }: ITokenPayload) {
+    return this.geofenceService.getAll(userId);
   }
 
   @Get(":id")
@@ -78,14 +80,13 @@ export class GeofenceController {
 
   @Put(":id")
   async update(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Param("id") id: string,
     @Body() geofence: Geofence,
   ): Promise<any> {
     try {
-      const uid = req.user?.uid;
       const updatedGeofence = await this.geofenceService.update(
-        uid,
+        userId,
         id,
         geofence,
       );
@@ -103,14 +104,13 @@ export class GeofenceController {
 
   @Put("geometry/:id")
   async updateGeometry(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Param("id") id: string,
     @Body() geofence: Geofence,
   ): Promise<any> {
     try {
-      const uid = req.user?.uid;
       const updatedGeofence = await this.geofenceService.updateGeofenceGeometry(
-        uid,
+        userId,
         id,
         geofence,
       );
@@ -127,8 +127,7 @@ export class GeofenceController {
   }
 
   @Post("delete")
-  async delete(@Req() req, @Body() requestBody: any) {
-    const uid = req.user?.uid;
+  async delete(@Body() requestBody: any) {
     const id = requestBody.removeId;
     try {
       await this.geofenceService.delete(id);

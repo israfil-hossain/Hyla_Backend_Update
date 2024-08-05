@@ -1,22 +1,21 @@
 // organization.controller.ts
 
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
-  Post,
-  Param,
-  UseGuards,
-  Req,
-  Query,
   InternalServerErrorException,
-  BadRequestException,
+  Param,
+  Post,
+  Query,
 } from "@nestjs/common";
-import { OrganizationService } from "./organization.service";
-import { CreateOrganizationDto } from "./dto/organization.dto";
-import { FirebaseAuthGuard } from "src/fireBaseAuth/FirebaseAuthGuard";
-import { UpdateOrganizationDto } from "./dto/update-organization.dto";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { CreateOrganizationDto } from "./dto/organization.dto";
+import { UpdateOrganizationDto } from "./dto/update-organization.dto";
+import { OrganizationService } from "./organization.service";
+
 @ApiTags("Organizations")
 @Controller("organizations")
 export class OrganizationController {
@@ -24,14 +23,12 @@ export class OrganizationController {
 
   @Post("createOrg")
   async create(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Body() createOrganizationDto: CreateOrganizationDto,
   ) {
-    const uid = req.user?.uid;
-
     try {
       const created = await this.organizationService.create(
-        uid,
+        userId,
         createOrganizationDto,
       );
 

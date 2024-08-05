@@ -17,7 +17,7 @@ export class RolesService {
   ) {}
 
   async createRole(userId: string, roleData: Partial<Roles>): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: userId }).exec();
+    const reqUser = await this.userModel.findById(userId).exec();
     console.log("ReqUser: ", reqUser);
 
     if (!reqUser) {
@@ -51,7 +51,7 @@ export class RolesService {
 
   async getAllRoles(userId: string): Promise<RolesDocument[]> {
     try {
-      const reqUser = await this.userModel.findOne({ idp_id: userId }).exec();
+      const reqUser = await this.userModel.findById(userId).exec();
 
       if (!reqUser) {
         throw new NotFoundException("User not found");

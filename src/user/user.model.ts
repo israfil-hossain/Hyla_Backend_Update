@@ -2,10 +2,17 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { Roles } from "src/roles/roles.model";
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: {
+    transform: function (_, ret) {
+      delete ret?.password;
+    },
+  },
+})
 export class User {
-  @Prop({ required: true, unique: true })
-  idp_id: string;
+  // @Prop({ required: true, unique: true })
+  // idp_id: string;
 
   @Prop({ required: true, unique: true })
   email: string;
@@ -16,8 +23,8 @@ export class User {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, default: "firebase" })
-  idp_provider: string;
+  // @Prop({ required: true, default: "firebase" })
+  // idp_provider: string;
 
   @Prop()
   fcm_token: string;

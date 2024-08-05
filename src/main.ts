@@ -1,13 +1,13 @@
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
+import * as fs from "fs";
 import morgan from "morgan";
 import * as path from "path";
-import * as fs from "fs";
-import { ValidationPipe } from "@nestjs/common";
-import { BucketService } from "./bucket/bucket.service";
+import { AppModule } from "./app.module";
 import { AppService } from "./app.service";
-import { GeoFencesAlertService } from "./geofencesAlert.service";
+import { BucketService } from "./bucket/bucket.service";
 import { configureSwaggerUI } from "./config/swagger.config";
+import { GeoFencesAlertService } from "./geofencesAlert.service";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config();
 
@@ -15,6 +15,7 @@ let app;
 async function bootstrap() {
   app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.setGlobalPrefix("api");
 
   // const logFilePath = path.resolve(__dirname, 'access.log');
 
@@ -29,7 +30,6 @@ async function bootstrap() {
 
   try {
     app.useGlobalPipes(new ValidationPipe());
-    app.setGlobalPrefix("api");
     await app.listen(8000);
     console.log("Application is listening on port 8000");
   } catch (error) {

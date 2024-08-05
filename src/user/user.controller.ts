@@ -6,9 +6,9 @@ import {
   Param,
   Post,
   Query,
-  Req,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { CreateUserDto } from "./dto/user.dto";
 import { User } from "./user.model";
@@ -20,15 +20,15 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async getAllUsers(@Req() req): Promise<User[]> {
-    const uid = req.user?.uid;
-    const users = await this.userService.getAllUsers(uid);
+  async getAllUsers(@RequestUser() { userId }: ITokenPayload): Promise<User[]> {
+    const users = await this.userService.getAllUsers(userId);
     return users;
   }
 
   @Get("profile")
-  async getUserProfile(@Req() req): Promise<User | null> {
-    const userId = req.user?.uid;
+  async getUserProfile(
+    @RequestUser() { userId }: ITokenPayload,
+  ): Promise<User | null> {
     if (!userId) {
       throw new NotFoundException("User ID not found in the request");
     }
@@ -44,7 +44,7 @@ export class UserController {
 
   @Get("getAll")
   async getAll_users(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Query("page") page: number = 1,
     @Query("pageSize") pageSize: number = 10,
     @Query("name") name: string,
@@ -54,14 +54,14 @@ export class UserController {
       pageSize: +pageSize,
       name: name || "",
     };
-    const uid = req.user?.uid;
-    return this.userService.getAllUserPagination(uid, options);
+    return this.userService.getAllUserPagination(userId, options);
   }
 
   @Get("isSuperUser")
-  async isSuperUserByIdpId(@Req() req): Promise<boolean | null> {
+  async isSuperUserByIdpId(
+    @RequestUser() { userId }: ITokenPayload,
+  ): Promise<boolean | null> {
     try {
-      const userId = req.user?.uid;
       return this.userService.checkIfUserIsSuperUser(userId);
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -73,12 +73,11 @@ export class UserController {
 
   @Post("createUser")
   async createUser(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Body() createUserDto: CreateUserDto,
   ): Promise<any> {
-    const uid = req.user?.uid;
     try {
-      const created = await this.userService.createUser(uid, createUserDto);
+      const created = await this.userService.createUser(userId, createUserDto);
       return {
         success: true,
         data: created,
@@ -91,13 +90,14 @@ export class UserController {
   }
 
   @Post("updateToi")
-  async updateToi(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
-
+  async updateToi(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     try {
       const toiData = requestBody.ids;
 
-      const data = await this.userService.updateToi(uid, toiData);
+      const data = await this.userService.updateToi(userId, toiData);
 
       return data;
     } catch (error) {
@@ -109,15 +109,16 @@ export class UserController {
   }
 
   @Post("selectToi")
-  async selectToi(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
-
+  async selectToi(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     try {
       const toiData = requestBody.ids;
       const isSelected = requestBody.isSelected;
 
       const data = await this.userService.selectedTransport(
-        uid,
+        userId,
         toiData,
         isSelected,
       );
@@ -132,14 +133,15 @@ export class UserController {
   }
 
   @Post("assignAlert")
-  async assignAlert(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
-
+  async assignAlert(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     try {
       const toiData = requestBody.transportId;
       const alertIds = requestBody.alertIds;
 
-      await this.userService.assignAlert(uid, toiData, alertIds);
+      await this.userService.assignAlert(userId, toiData, alertIds);
 
       return { success: true, message: "Toi updated successfully" };
     } catch (error) {
@@ -151,13 +153,15 @@ export class UserController {
   }
 
   @Post("assignGeo")
-  async assignGeo(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
+  async assignGeo(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     try {
       const toiData = requestBody.transportId;
       const ids = requestBody.Ids;
 
-      const data = await this.userService.assignGeofence(uid, toiData, ids);
+      const data = await this.userService.assignGeofence(userId, toiData, ids);
 
       return data;
     } catch (error) {
@@ -167,12 +171,14 @@ export class UserController {
   }
 
   @Post("removeFromToi")
-  async removeFromToi(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
+  async removeFromToi(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     const transportId = requestBody.removeId;
 
     try {
-      await this.userService.removeFromToi(uid, transportId);
+      await this.userService.removeFromToi(userId, transportId);
 
       return {
         success: true,
@@ -187,13 +193,15 @@ export class UserController {
   }
 
   @Post("removeAlertFromToi")
-  async removeAlertFromToi(@Req() req, @Body() requestBody: any): Promise<any> {
-    const uid = req.user?.uid;
+  async removeAlertFromToi(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() requestBody: any,
+  ): Promise<any> {
     const transportId = requestBody.removeId;
     const alertId = requestBody.removeAlertId;
 
     try {
-      await this.userService.removeAlertFromToi(uid, transportId, alertId);
+      await this.userService.removeAlertFromToi(userId, transportId, alertId);
 
       return {
         success: true,
@@ -208,15 +216,14 @@ export class UserController {
   }
   @Post("removeGeofenceFromToi")
   async removeGeofenceFromToi(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Body() requestBody: any,
   ): Promise<any> {
-    const uid = req.user?.uid;
     const transportId = requestBody.removeId;
     const geoId = requestBody.removeGeoId;
 
     try {
-      await this.userService.removeGeofenceFromToi(uid, transportId, geoId);
+      await this.userService.removeGeofenceFromToi(userId, transportId, geoId);
 
       return {
         success: true,
@@ -232,13 +239,16 @@ export class UserController {
 
   @Post("updateUser/:userId")
   async updateUser(
-    @Req() req,
-    @Param("userId") userId: string,
+    @RequestUser() { userId }: ITokenPayload,
+    @Param("userId") updateUserId: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<any> {
-    const uid = req.user?.uid;
     try {
-      const update = this.userService.updateUser(uid, userId, updateUserDto);
+      const update = this.userService.updateUser(
+        userId,
+        updateUserId,
+        updateUserDto,
+      );
       return {
         success: true,
         data: update,
@@ -284,14 +294,12 @@ export class UserController {
 
   @Post("filterField")
   async updateFilterField(
-    @Req() req,
+    @RequestUser() { userId }: ITokenPayload,
     @Body() body: { hiddenColumns: string[]; visibleColumnsOrder: string[] },
   ) {
-    const uid = req.user?.uid;
-
     try {
       const updatedUser = await this.userService.updateFilterField(
-        uid,
+        userId,
         body.hiddenColumns,
         body.visibleColumnsOrder,
       );

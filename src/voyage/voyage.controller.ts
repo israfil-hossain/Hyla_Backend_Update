@@ -1,32 +1,30 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  HttpStatus,
-  HttpException,
-  Req,
-  Query,
-  BadRequestException,
   InternalServerErrorException,
+  Param,
+  Post,
+  Query,
 } from "@nestjs/common";
 
-import { VoyageService } from "./voyage.service";
-import { Voyage } from "./voyage.model";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { Voyage } from "./voyage.model";
+import { VoyageService } from "./voyage.service";
 @ApiTags("Voyage")
 @Controller("voyage")
 export class VoyageController {
   constructor(private readonly service: VoyageService) {}
 
   @Post("create")
-  async create(@Req() req, @Body() voyage: Voyage) {
-    const uid = req.user?.uid;
+  async create(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() voyage: Voyage,
+  ) {
     try {
-      const data = await this.service.create(uid, voyage);
+      const data = await this.service.create(userId, voyage);
       return {
         success: true,
         data: data,
@@ -39,10 +37,12 @@ export class VoyageController {
   }
 
   @Get("getAll")
-  async getAll(@Req() req, @Query() query: any): Promise<any> {
+  async getAll(
+    @RequestUser() { userId }: ITokenPayload,
+    @Query() query: any,
+  ): Promise<any> {
     try {
-      const uid = req.user?.uid;
-      const data = await this.service.getAll(uid, query);
+      const data = await this.service.getAll(userId, query);
       return data;
     } catch (error) {
       if (
@@ -80,8 +80,7 @@ export class VoyageController {
   }
 
   @Post("delete")
-  async delete(@Req() req, @Body() requestBody: any) {
-    const uid = req.user?.uid;
+  async delete(@Body() requestBody: any) {
     const id = requestBody.removeId;
     try {
       await this.service.delete(id);

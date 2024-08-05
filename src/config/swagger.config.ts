@@ -36,5 +36,5 @@ const swaggerUiOptions: SwaggerCustomOptions = {
 
 export const configureSwaggerUI = (app: INestApplication<any>) => {
   const document = SwaggerModule.createDocument(app, documentConfig);
-  SwaggerModule.setup("api/swagger", app, document, swaggerUiOptions);
+  SwaggerModule.setup("swagger", app, document, swaggerUiOptions);
 };

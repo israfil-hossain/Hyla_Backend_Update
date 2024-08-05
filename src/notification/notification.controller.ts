@@ -1,40 +1,25 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  NotFoundException,
-  Req,
-  BadRequestException,
-  Query,
-  InternalServerErrorException,
-} from "@nestjs/common";
-import { NotificationService } from "./notification.service";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { NotificationService } from "./notification.service";
 @ApiTags("Notification")
 @Controller("notification")
 export class NotificationController {
   constructor(private readonly service: NotificationService) {}
 
   @Get()
-  findAll(@Req() req) {
-    const uid = req.user?.uid;
-    return this.service.findAll(uid);
+  findAll(@RequestUser() { userId }: ITokenPayload) {
+    return this.service.findAll(userId);
   }
 
   @Get("unread")
-  getAllunread(@Req() req) {
-    const uid = req.user?.uid;
-    return this.service.getAllUnreadNotification(uid);
+  getAllunread(@RequestUser() { userId }: ITokenPayload) {
+    return this.service.getAllUnreadNotification(userId);
   }
 
   @Get("getunread")
-  getunread(@Req() req) {
-    const uid = req.user?.uid;
-    return this.service.UnreadNotification(uid);
+  getunread(@RequestUser() { userId }: ITokenPayload) {
+    return this.service.UnreadNotification(userId);
   }
 
   @Get(":id")
@@ -43,8 +28,7 @@ export class NotificationController {
   }
 
   @Post("delete")
-  async delete(@Req() req, @Body() requestBody: any) {
-    const uid = req.user?.uid;
+  async delete(@Body() requestBody: any) {
     const id = requestBody.removeId;
     try {
       await this.service.remove(id);

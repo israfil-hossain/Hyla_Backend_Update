@@ -1,32 +1,28 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  HttpStatus,
-  HttpException,
-  Req,
-  Query,
-  BadRequestException,
   InternalServerErrorException,
+  Param,
+  Post,
+  Put,
+  Query,
 } from "@nestjs/common";
-import { AlertService } from "./alert.service";
-import { Model } from "mongoose";
-import { Alert, AlertSchema } from "./alert.model";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { Alert } from "./alert.model";
+import { AlertService } from "./alert.service";
+
 @ApiTags("Alerts")
 @Controller("alerts")
 export class AlertController {
   constructor(private readonly alertService: AlertService) {}
 
   @Post("create")
-  async create(@Req() req, @Body() alert: Alert) {
-    const uid = req.user?.uid;
+  async create(@RequestUser() { userId }: ITokenPayload, @Body() alert: Alert) {
     try {
-      const data = await this.alertService.create(uid, alert);
+      const data = await this.alertService.create(userId, alert);
       return {
         success: true,
         data: data,
@@ -39,16 +35,17 @@ export class AlertController {
   }
 
   @Get()
-  findAll(@Req() req) {
-    const uid = req.user?.uid;
-    return this.alertService.findAll(uid);
+  findAll(@RequestUser() { userId }: ITokenPayload) {
+    return this.alertService.findAll(userId);
   }
 
   @Get("getAll")
-  async getAll(@Req() req, @Query() query: any): Promise<any> {
+  async getAll(
+    @RequestUser() { userId }: ITokenPayload,
+    @Query() query: any,
+  ): Promise<any> {
     try {
-      const uid = req.user?.uid;
-      const data = await this.alertService.getAll(uid, query);
+      const data = await this.alertService.getAll(userId, query);
       return data;
     } catch (error) {
       if (
@@ -86,11 +83,9 @@ export class AlertController {
   }
 
   @Post("delete")
-  async delete(@Req() req, @Body() requestBody: any) {
-    const uid = req.user?.uid;
-    const id = requestBody.removeId;
+  async delete(@Body() requestBody: any) {
     try {
-      await this.alertService.delete(id);
+      await this.alertService.delete(requestBody.removeId);
 
       return {
         success: true,

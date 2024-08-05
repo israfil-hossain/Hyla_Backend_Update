@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 // import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
 import { ConfigModule } from "@nestjs/config";
-import { APP_GUARD } from "@nestjs/core";
+import { JwtModule } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AisDataFiledModule } from "./aisDatafield/aisDataField.modules";
 import { Alert, AlertSchema } from "./alert/alert.model";
@@ -9,12 +9,13 @@ import { AlertModule } from "./alert/alert.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthenticationModule } from "./authentication/authentication.module";
+import { AuthenticationGuardProvider } from "./authentication/guard/authentication.guard";
 import { Bucket, BucketSchema } from "./bucket/bucket.model";
 import { BucketModule } from "./bucket/bucket.module";
 import { BucketService } from "./bucket/bucket.service";
+import { jwtConfig } from "./config/jwt.config";
 import { EncryptionModule } from "./encryption/encryption.module";
 import { FirebaseModule } from "./fireBaseAuth/firebase.module";
-import { FirebaseAuthGuard } from "./fireBaseAuth/FirebaseAuthGuard";
 import { Geofence, GeofenceSchema } from "./geoFence/geofence.model";
 import { GeofenceModule } from "./geoFence/geofence.modules";
 import { GeofenceService } from "./geoFence/geofence.service";
@@ -46,13 +47,14 @@ import { VoyageModule } from "./voyage/voyage.module";
     ConfigModule.forRoot({
       envFilePath: ".env",
     }),
+    JwtModule.registerAsync(jwtConfig),
     MongooseModule.forRootAsync({
       useFactory: async () => ({
         // uri: process.env.MONGO_URL_DEV, // dev
         // uri: process.env.MONGO_URL_PROD, // prod
         uri: process.env.MONGO_URL_LOCAL, // local
-        user: process.env.MONGO_USER,
-        pass: process.env.MONGO_PASSWORD,
+        // user: process.env.MONGO_USER,
+        // pass: process.env.MONGO_PASSWORD,
         // user: null,
         // pass: null,
       }),
@@ -67,6 +69,7 @@ import { VoyageModule } from "./voyage/voyage.module";
       { name: Notification.name, schema: NotificationSchema },
     ]),
 
+    AuthenticationModule,
     FirebaseModule,
     UserModule,
     OrganizationModule,
@@ -81,15 +84,11 @@ import { VoyageModule } from "./voyage/voyage.module";
     VoyageModule,
     NotificationModule,
     EncryptionModule,
-    AuthenticationModule,
   ],
   controllers: [AppController],
   providers: [
+    AuthenticationGuardProvider,
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: FirebaseAuthGuard,
-    },
     MailerService,
     BucketService,
     GeofenceService,

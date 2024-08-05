@@ -12,7 +12,7 @@ export class PortService {
   ) {}
 
   async create(uid: string, Port: Port): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
 
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);

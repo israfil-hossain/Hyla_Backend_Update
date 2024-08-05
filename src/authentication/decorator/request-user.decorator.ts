@@ -8,7 +8,7 @@ import { isValidObjectId } from "mongoose";
 
 const logger = new Logger("AuthUserId");
 
-export const AuthUserId = createParamDecorator(
+export const RequestUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): ITokenPayload => {
     const request = ctx.switchToHttp().getRequest();
     const tokenUser: ITokenPayload = request?.user;

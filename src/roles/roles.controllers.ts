@@ -1,28 +1,27 @@
 // Import necessary modules and your Roles service
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
-  Param,
-  Put,
-  UseGuards,
-  Req,
   NotFoundException,
+  Param,
+  Post,
+  Put,
 } from "@nestjs/common";
-import { RolesService } from "./roles.services";
-import { Roles, RolesDocument } from "./roles.model";
-import { FirebaseAuthGuard } from "src/fireBaseAuth/FirebaseAuthGuard";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { Roles, RolesDocument } from "./roles.model";
+import { RolesService } from "./roles.services";
 @ApiTags("Roles")
 @Controller("roles")
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post("createRole")
-  async createRole(@Req() req, @Body() roleData: Partial<Roles>): Promise<any> {
-    const userId = req.user?.uid;
-    console.log("User ID :", userId);
+  async createRole(
+    @RequestUser() { userId }: ITokenPayload,
+    @Body() roleData: Partial<Roles>,
+  ): Promise<any> {
     try {
       const created = await this.rolesService.createRole(userId, roleData);
       console.log("created role ", created);
@@ -38,9 +37,10 @@ export class RolesController {
   }
 
   @Get("getAllRoles")
-  async getAllRoles(@Req() req): Promise<RolesDocument[]> {
+  async getAllRoles(
+    @RequestUser() { userId }: ITokenPayload,
+  ): Promise<RolesDocument[]> {
     try {
-      const userId = req.user?.uid;
       return this.rolesService.getAllRoles(userId);
     } catch (error) {
       if (error instanceof NotFoundException) {

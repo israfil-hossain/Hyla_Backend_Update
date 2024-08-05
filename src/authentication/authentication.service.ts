@@ -184,23 +184,6 @@ export class AuthenticationService {
     }
   }
 
-  async getLoggedInUser(userId: string): Promise<string> {
-    try {
-      const user = await this.userModel.findById(userId);
-
-      if (!user) {
-        throw new NotFoundException(`No user found with id: ${userId}`);
-      }
-
-      return "Token verification succeeded.";
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-
-      this.logger.error(`Error getting current user:`, error);
-      throw new BadRequestException("Could not get user info");
-    }
-  }
-
   // Private Helper Methods
   private async generateAccessToken(userData: UserDocument) {
     try {
@@ -228,7 +211,7 @@ export class AuthenticationService {
 
       const refreshToken = await this.refreshTokenModel.create({
         token,
-        user: userId,
+        tokenUser: userId,
       });
 
       return refreshToken.token;

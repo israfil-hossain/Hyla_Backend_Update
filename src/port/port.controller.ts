@@ -1,32 +1,18 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  HttpStatus,
-  HttpException,
-  Req,
-  Query,
-  BadRequestException,
-  InternalServerErrorException,
-} from "@nestjs/common";
-import { PortService } from "./port.service";
-import { Model } from "mongoose";
-import { Port } from "./port.model";
+import { Body, Controller, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { RequestUser } from "src/authentication/decorator/request-user.decorator";
+import { Port } from "./port.model";
+import { PortService } from "./port.service";
+
 @ApiTags("Ports")
 @Controller("ports")
 export class PortController {
   constructor(private readonly service: PortService) {}
 
   @Post("create")
-  async create(@Req() req, @Body() alert: Port) {
-    const uid = req.user?.uid;
+  async create(@RequestUser() { userId }: ITokenPayload, @Body() alert: Port) {
     try {
-      const data = await this.service.create(uid, alert);
+      const data = await this.service.create(userId, alert);
       return {
         success: true,
         data: data,

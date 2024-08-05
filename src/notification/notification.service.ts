@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 import { User, UserDocument } from "src/user/user.model";
 import { Notification, NotificationDocument } from "./notification.model";
 
@@ -13,7 +13,7 @@ export class NotificationService {
   ) {}
 
   async getAllUnreadNotification(uid: string): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
     const data = await this.Model.find({ userId: reqUser?._id, isRead: false })
       .sort({ createdAt: -1 })
       .exec();
@@ -21,7 +21,7 @@ export class NotificationService {
   }
 
   async UnreadNotification(uid: string): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
     await this.Model.updateMany(
       { userId: reqUser?._id, isRead: false },
       { $set: { isRead: true } },
@@ -34,7 +34,7 @@ export class NotificationService {
   }
 
   async findAll(uid: string): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
     const data = await this.Model.find({ userId: reqUser?._id })
       .sort({ createdAt: -1 })
       .exec();

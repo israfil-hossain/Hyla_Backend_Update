@@ -1,21 +1,18 @@
 // bucket.controller.ts
 
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   NotFoundException,
   Param,
-  ParseFloatPipe,
   Post,
-  Query,
-  Req,
 } from "@nestjs/common";
-import { BucketService } from "./bucket.service";
 import { ConfigService } from "@nestjs/config";
-import { request } from "express";
+import { ApiTags } from "@nestjs/swagger";
+import { BucketService } from "./bucket.service";
 
+@ApiTags("Buckets")
 @Controller("buckets")
 export class BucketController {
   constructor(
@@ -132,8 +129,7 @@ export class BucketController {
   }
 
   @Post("createCustom")
-  async create(@Req() req, @Body() requestBody: any) {
-    const uid = req.user?.uid;
+  async create(@Body() requestBody: any) {
     const id = requestBody.transportId;
     const customData = requestBody.customData;
     try {

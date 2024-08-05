@@ -18,10 +18,6 @@ export class CreateOrganizationDto {
   @IsOptional()
   owner_id: string;
 
-  // @IsNotEmpty()
-  // @IsString()
-  // idp_id: string;
-
   @IsEmail()
   email: string;
 

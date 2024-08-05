@@ -7,8 +7,8 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, ObjectId } from "mongoose";
-import { Alert } from "./alert.model";
 import { User, UserDocument } from "src/user/user.model";
+import { Alert } from "./alert.model";
 interface PaginatedOrganizations {
   data: Alert[];
   totalCount: number;
@@ -21,7 +21,7 @@ export class AlertService {
   ) {}
 
   async create(uid: string, alert: Alert): Promise<any> {
-    const reqUser = await this.userModel.findOne({ idp_id: uid }).exec();
+    const reqUser = await this.userModel.findById(uid).exec();
 
     if (!reqUser) {
       throw new HttpException("User Not Found.", HttpStatus.BAD_REQUEST);
@@ -45,7 +45,7 @@ export class AlertService {
 
   async findAll(uid: string): Promise<any> {
     const reqUser = await this.userModel
-      .findOne({ idp_id: uid })
+      .findById(uid)
       .populate("organization")
       .exec();
 
@@ -60,7 +60,7 @@ export class AlertService {
       const parsedPageSize = parseInt(pageSize);
 
       const reqUser = await this.userModel
-        .findOne({ idp_id: uid })
+        .findById(uid)
         .populate("organization")
         .exec();
 

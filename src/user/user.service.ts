@@ -6,13 +6,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import * as admin from "firebase-admin";
 import mongoose, { Model, Schema as MongooseSchema } from "mongoose";
 import { EncryptionService } from "src/encryption/encryption.service";
 import { FirebaseService } from "src/fireBaseAuth/firbase.services";
 import { Geofence, GeofenceDocument } from "src/geoFence/geofence.model";
 import { Roles, RolesDocument } from "src/roles/roles.model";
-import { MailerService } from "../mail/mailer.service";
 import {
   Organization,
   OrganizationDocument,
@@ -29,7 +27,6 @@ export class UserService {
     @InjectModel(Roles.name) private readonly rolesModel: Model<RolesDocument>,
     @InjectModel(Geofence.name)
     private readonly geoModel: Model<GeofenceDocument>,
-    private readonly mailerService: MailerService,
     private readonly firebaseService: FirebaseService,
     private readonly encryptionService: EncryptionService,
   ) {}
@@ -76,7 +73,7 @@ export class UserService {
     return await createdUser.save();
   }
 
-  async findById(userId: string): Promise<User | null> {
+  async getProfile(userId: string): Promise<User | null> {
     const user = await this.userModel
       .findById(userId)
       .populate("organization")
@@ -98,7 +95,7 @@ export class UserService {
 
   async findUserById(userId: string): Promise<User | null> {
     const user = await this.userModel
-      .findOne({ _id: userId })
+      .findById(userId)
       .populate("organization")
       .populate("toi")
       .exec();
@@ -295,7 +292,7 @@ export class UserService {
       );
     }
 
-    const existingUser = await this.userModel.findOne({ _id: userId }).exec();
+    const existingUser = await this.userModel.findById(userId).exec();
 
     if (!existingUser) {
       throw new HttpException("User not found", HttpStatus.BAD_REQUEST);
@@ -535,16 +532,6 @@ export class UserService {
     }
 
     return { success: true, message: "Geofence removed successfully" };
-  }
-
-  async forgotPassword(email: string): Promise<void> {
-    const user = await this.userModel.findOne({ email }).exec();
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-    const resetToken = await admin.auth().generatePasswordResetLink(email);
-
-    await this.mailerService.sendPasswordResetEmail(email, resetToken);
   }
 
   async updateFilterField(

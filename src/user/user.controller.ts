@@ -33,7 +33,7 @@ export class UserController {
       throw new NotFoundException("User ID not found in the request");
     }
 
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.getProfile(userId);
 
     if (!user) {
       throw new NotFoundException("User not found");
@@ -284,12 +284,6 @@ export class UserController {
   @Post("delete/:id")
   delete(@Param("id") id: string) {
     return this.userService.delete(id);
-  }
-
-  @Post("/forgot-password")
-  async forgotPassword(@Body("email") email: string): Promise<void> {
-    console.log(email);
-    await this.userService.forgotPassword(email);
   }
 
   @Post("filterField")

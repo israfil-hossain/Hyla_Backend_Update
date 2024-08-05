@@ -49,4 +49,11 @@ export class AuthenticationController {
   ) {
     return this.authService.changePassword(changePasswordDto, userId);
   }
+
+  @Post("forgot-password")
+  @HttpCode(200)
+  async forgotPassword(@Body("email") email: string): Promise<void> {
+    console.log(email);
+    await this.authService.forgotPassword(email);
+  }
 }

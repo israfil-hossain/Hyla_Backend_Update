@@ -154,7 +154,7 @@ export class MailerService {
     html: string,
   ): Promise<string> {
     try {
-      const info = await this.transporter.sendMail({
+      await this.transporter.sendMail({
         from: `Hylapps <${process.env.EMAIL}>`,
         to,
         subject,

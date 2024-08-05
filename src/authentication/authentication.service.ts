@@ -19,6 +19,7 @@ import {
   RefreshToken,
   RefreshTokenDocument,
 } from "./entities/refresh-token.entity";
+import { MailerService } from "src/mail/mailer.service";
 
 @Injectable()
 export class AuthenticationService {
@@ -31,13 +32,16 @@ export class AuthenticationService {
 
     private readonly jwtService: JwtService,
     private readonly encryptionService: EncryptionService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async signIn(signInDto: SignInDto): Promise<TokenResponseDto> {
     try {
-      const user = await this.userModel.findOne({
-        email: signInDto.email,
-      });
+      const user = await this.userModel
+        .findOne({
+          email: signInDto.email,
+        })
+        .exec();
 
       if (!user) {
         throw new NotFoundException(
@@ -57,7 +61,7 @@ export class AuthenticationService {
       }
 
       const accessToken = await this.generateAccessToken(user);
-      const refreshToken = await this.createRefreshToken(user?.id?.toString());
+      const refreshToken = await this.createRefreshToken(user?._id?.toString());
 
       return new TokenResponseDto(accessToken, refreshToken);
     } catch (error) {
@@ -70,19 +74,13 @@ export class AuthenticationService {
 
   async refreshAccessToken(refreshToken: string): Promise<TokenResponseDto> {
     try {
-      const refreshTokenDoc = await this.refreshTokenModel.findOne(
-        {
+      const refreshTokenDoc = await this.refreshTokenModel
+        .findOne({
           token: refreshToken,
           expiresAt: { $gt: new Date() },
-        },
-        {
-          populate: [
-            {
-              path: "tokenUser",
-            },
-          ],
-        },
-      );
+        })
+        .populate("tokenUser")
+        .exec();
 
       if (!refreshTokenDoc) {
         this.logger.error("Refresh token is invalid or expired");
@@ -103,10 +101,12 @@ export class AuthenticationService {
 
   async revokeRefreshToken(refreshToken: string): Promise<string> {
     try {
-      const refreshTokenDoc = await this.refreshTokenModel.findOne({
-        token: refreshToken,
-        expiresAt: { $gt: new Date() },
-      });
+      const refreshTokenDoc = await this.refreshTokenModel
+        .findOne({
+          token: refreshToken,
+          expiresAt: { $gt: new Date() },
+        })
+        .exec();
 
       if (!refreshTokenDoc) {
         this.logger.error(
@@ -117,12 +117,14 @@ export class AuthenticationService {
         );
       }
 
-      await this.refreshTokenModel.findOneAndUpdate(
-        { _id: refreshTokenDoc._id },
-        {
-          expiresAt: new Date(),
-        },
-      );
+      await this.refreshTokenModel
+        .findOneAndUpdate(
+          { _id: refreshTokenDoc._id },
+          {
+            expiresAt: new Date(),
+          },
+        )
+        .exec();
 
       return "Refresh token revoked successfully";
     } catch (error) {
@@ -144,7 +146,7 @@ export class AuthenticationService {
         );
       }
 
-      const user = await this.userModel.findById(userId);
+      const user = await this.userModel.findById(userId).exec();
 
       if (!user) {
         throw new NotFoundException(`No user found with id: ${userId}`);
@@ -166,14 +168,16 @@ export class AuthenticationService {
         changePasswordDto.newPassword,
       );
 
-      await this.userModel.findOneAndUpdate(
-        {
-          _id: user._id,
-        },
-        {
-          password: hashedPassword,
-        },
-      );
+      await this.userModel
+        .findOneAndUpdate(
+          {
+            _id: user._id,
+          },
+          {
+            password: hashedPassword,
+          },
+        )
+        .exec();
 
       return "Password changed successfully";
     } catch (error) {
@@ -182,6 +186,21 @@ export class AuthenticationService {
       this.logger.error(`Error changing password:`, error);
       throw new BadRequestException("Could not change password");
     }
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userModel.findOne({ email }).exec();
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const resetToken = this.encryptionService.generateTimestampToken(
+      user?._id?.toString(),
+      expiryTime,
+    );
+
+    await this.mailerService.sendPasswordResetEmail(email, resetToken);
   }
 
   // Private Helper Methods

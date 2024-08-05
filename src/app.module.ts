@@ -49,8 +49,8 @@ import { VoyageModule } from "./voyage/voyage.module";
     JwtModule.registerAsync(jwtConfig),
     MongooseModule.forRootAsync({
       useFactory: async () => ({
-        // uri: process.env.MONGO_URL_DEV, // dev
-        uri: process.env.MONGO_URL_PROD, // prod
+        uri: process.env.MONGO_URL_DEV, // dev
+        // uri: process.env.MONGO_URL_PROD, // prod
         // uri: process.env.MONGO_URL_LOCAL, // local
         user: process.env.MONGO_USER,
         pass: process.env.MONGO_PASSWORD,

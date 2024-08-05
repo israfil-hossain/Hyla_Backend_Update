@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import * as argon2 from "argon2";
 import * as base64url from "base64url";
-import * as bcrypt from "bcrypt";
 import * as uuid from "uuid";
 
 @Injectable()
@@ -14,7 +14,12 @@ export class EncryptionService {
       throw new BadRequestException("Password is required");
     }
 
-    return await bcrypt.hash(rawPassword, this.saltRounds);
+    try {
+      return await argon2.hash(rawPassword);
+    } catch (err) {
+      this.logger.error("Failed to hash password", err);
+      throw new Error("Failed to hash password");
+    }
   }
 
   async verifyPassword(
@@ -26,11 +31,16 @@ export class EncryptionService {
       throw new BadRequestException("Password is required");
     }
 
-    return await bcrypt.compare(rawPassword, hashedPassword);
+    try {
+      return await argon2.verify(hashedPassword, rawPassword);
+    } catch (err) {
+      this.logger.error("Failed to verify password", err);
+      throw new Error("Failed to verify password");
+    }
   }
 
   generateUniqueToken(length: number = 3): string {
-    const mergedUuid = Array.from({ length }, () => uuid.v4()).join("");
+    const mergedUuid = Array.from({ length }, () => uuid.v7()).join("");
     const tokenBuffer = Buffer.from(mergedUuid.replace(/-/g, ""), "hex");
     return base64url.default(tokenBuffer);
   }

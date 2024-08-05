@@ -1,25 +1,18 @@
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
-  Param,
-  ValidationPipe,
-  UsePipes,
-  UseGuards,
-  Req,
   NotFoundException,
+  Param,
+  Post,
   Query,
-  HttpException,
-  HttpStatus,
+  Req,
 } from "@nestjs/common";
-import { UserService } from "./user.service";
-import { User } from "./user.model";
-import { CreateUserDto } from "./dto/user.dto";
-import { FirebaseAuthGuard } from "../fireBaseAuth/FirebaseAuthGuard";
-import * as admin from "firebase-admin";
-import { UpdateUserDto } from "./dto/update-user.dto";
 import { ApiTags } from "@nestjs/swagger";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { CreateUserDto } from "./dto/user.dto";
+import { User } from "./user.model";
+import { UserService } from "./user.service";
 
 @ApiTags("Users")
 @Controller("users")

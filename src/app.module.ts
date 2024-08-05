@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 // import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
@@ -8,9 +8,11 @@ import { Alert, AlertSchema } from "./alert/alert.model";
 import { AlertModule } from "./alert/alert.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { AuthenticationModule } from "./authentication/authentication.module";
 import { Bucket, BucketSchema } from "./bucket/bucket.model";
 import { BucketModule } from "./bucket/bucket.module";
 import { BucketService } from "./bucket/bucket.service";
+import { EncryptionModule } from "./encryption/encryption.module";
 import { FirebaseModule } from "./fireBaseAuth/firebase.module";
 import { FirebaseAuthGuard } from "./fireBaseAuth/FirebaseAuthGuard";
 import { Geofence, GeofenceSchema } from "./geoFence/geofence.model";
@@ -78,6 +80,8 @@ import { VoyageModule } from "./voyage/voyage.module";
     PortModule,
     VoyageModule,
     NotificationModule,
+    EncryptionModule,
+    AuthenticationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -91,21 +95,23 @@ import { VoyageModule } from "./voyage/voyage.module";
     GeofenceService,
   ],
 })
-export class AppModule implements OnModuleInit {
-  constructor() {}
+export class AppModule {}
 
-  async onModuleInit() {
-    try {
-      MongooseModule.forRoot(
-        // process.env.MONGO_URL_DEV,
-        process.env.MONGO_URL_PROD,
-      );
+// export class AppModule implements OnModuleInit {
+//   constructor() {}
 
-      console.log("Database connection successful");
-    } catch (error) {
-      console.error("Database connection failed", error.message);
-    }
-  }
-}
+//   async onModuleInit() {
+//     try {
+//       MongooseModule.forRoot(
+//         // process.env.MONGO_URL_DEV,
+//         process.env.MONGO_URL_PROD,
+//       );
+
+//       console.log("Database connection successful");
+//     } catch (error) {
+//       console.error("Database connection failed", error.message);
+//     }
+//   }
+// }
 
 // this is my new commet

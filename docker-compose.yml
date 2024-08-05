@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  hyla-backend:
+    build:
+      context: .
+      target: builder
+    image: hyla:backend
+    container_name: hyla-backend
+    ports:
+      - "8000:4000"
+    volumes:
+      - ./.env:/app/.env
+    command: npm run start:prod

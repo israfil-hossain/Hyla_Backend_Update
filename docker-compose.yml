@@ -5,7 +5,7 @@ services:
     build:
       context: .
       target: builder
-    image: hyla:backend
+    image: hyla:backend-dev
     container_name: hyla-backend-update
     ports:
       - "8000:8100"

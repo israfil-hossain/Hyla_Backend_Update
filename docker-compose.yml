@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  hyla-backend:
+  hyla-backend-update:
     build:
       context: .
       target: builder
     image: hyla:backend
-    container_name: hyla-backend
+    container_name: hyla-backend-update
     ports:
       - "8000:4000"
     volumes:

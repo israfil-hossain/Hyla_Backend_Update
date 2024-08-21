@@ -21,5 +21,5 @@ COPY --from=builder /app/dist ./dist
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 USER nodejs
-EXPOSE 8100
+EXPOSE 8000
 CMD ["yarn", "run", "start:prod"]

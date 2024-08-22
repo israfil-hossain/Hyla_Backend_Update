@@ -1,6 +1,11 @@
 // bucket.service.ts
 
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import mongoose, { Model, Schema, Types } from "mongoose";
 import { Bucket, BucketDocument } from "./bucket.model";
@@ -237,7 +242,9 @@ export class BucketService {
       .exec();
 
     if (!bucket || !bucket.AISDataObject || bucket.AISDataObject.length === 0) {
-      throw new Error("No AIS data found for the specified transportId");
+      throw new NotFoundException(
+        "No AIS data found for the specified transportId",
+      );
     }
 
     const latestAISData = bucket.AISDataObject.reduce((latest, current) =>
@@ -434,3 +441,4 @@ export class BucketService {
     return dataUpdate;
   }
 }
+

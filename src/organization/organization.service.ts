@@ -10,12 +10,13 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import axios from "axios";
-import { Model } from "mongoose";
+import { HydratedDocument, Model } from "mongoose";
 import {
   TrackableTransport,
   TrackableTransportDocument,
 } from "src/Trackable_Transport/trackable_transport.model";
 import { Bucket, BucketDocument } from "src/bucket/bucket.model";
+import { EncryptionService } from "src/encryption/encryption.service";
 import { MailerService } from "src/mail/mailer.service";
 import { Roles, RolesDocument } from "src/roles/roles.model";
 import { Voyage, VoyageDocument } from "src/voyage/voyage.model";
@@ -43,6 +44,7 @@ export class OrganizationService {
     @InjectModel(TrackableTransport.name)
     private trackableTransportModel: Model<TrackableTransportDocument>,
     private readonly mailerService: MailerService,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   async fetchDataFromAIS(imo: any): Promise<any> {
@@ -153,9 +155,12 @@ export class OrganizationService {
       }
     }
 
+    const hashedPassword = await this.encryptionService.hashPassword(password);
+
     const user = new this.userModel({
       name: ownerName,
       email,
+      password: hashedPassword,
       created_by: reqUser?._id,
       roles,
       isOrganizationOwner: true,
@@ -163,7 +168,7 @@ export class OrganizationService {
     });
 
     // const createdUser = await user.save();
-    const createdUser = (await user.save()) as User & { _id: string }; // Type assertion
+    const createdUser = (await user.save()) as HydratedDocument<User>;
 
     if (!createdUser) {
       throw new HttpException(
@@ -172,7 +177,7 @@ export class OrganizationService {
       );
     }
 
-    createOrganizationDto.owner_id = createdUser._id;
+    createOrganizationDto.owner_id = createdUser._id.toString();
     createOrganizationDto.created_by = reqUser._id.toString();
 
     const createdOrganization = new this.organizationModel(

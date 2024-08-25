@@ -30,7 +30,7 @@ export class UserService {
   ) {}
 
   async createSuper(createUserDto: CreateUserDto): Promise<User> {
-    const { name, email, roles } = createUserDto;
+    const { name, email, roles, password } = createUserDto;
 
     const existingUser = await this.userModel.findOne({ email }).exec();
     if (existingUser) {
@@ -61,9 +61,12 @@ export class UserService {
       }
     }
 
+    const hashedPassword = await this.encryptionService.hashPassword(password);
+
     const createdUser = new this.userModel({
       name,
       email,
+      password: hashedPassword,
       roles,
       permissions: userPermissions,
     });

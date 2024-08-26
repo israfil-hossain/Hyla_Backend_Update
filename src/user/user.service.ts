@@ -232,7 +232,7 @@ export class UserService {
       name,
       email,
       password: hashedPassword,
-      // organization: reqUser.organization,
+      organization: reqUser.organization,
       created_by: reqUser?._id,
       roles,
       permissions: userPermissions,
@@ -561,3 +561,4 @@ export class UserService {
     return UserData;
   }
 }
+

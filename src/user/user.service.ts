@@ -199,39 +199,28 @@ export class UserService {
       );
     }
 
-    let userPermissions: Record<string, string> = {};
+    const userPermissions: Record<string, string> = {};
 
-    if (roles.length > 0) {
-      for (const roleId of roles) {
-        const role = await this.rolesModel.findById(roleId).exec();
+    for (const roleId of roles) {
+      const role = await this.rolesModel.findById(roleId).exec();
 
-        if (role) {
-          role.permissions.forEach((permission: any) => {
-            const { category, read, write } = permission;
+      if (role) {
+        role.permissions.forEach((permission: any) => {
+          const { category, read, write } = permission;
 
-            if (!(category in userPermissions)) {
-              userPermissions[category] = "";
-            }
+          if (!(category in userPermissions)) {
+            userPermissions[category] = "";
+          }
 
-            if (read && !userPermissions[category].includes("r")) {
-              userPermissions[category] += "r";
-            }
+          if (read && !userPermissions[category].includes("r")) {
+            userPermissions[category] += "r";
+          }
 
-            if (write && !userPermissions[category].includes("w")) {
-              userPermissions[category] += "w";
-            }
-          });
-        }
+          if (write && !userPermissions[category].includes("w")) {
+            userPermissions[category] += "w";
+          }
+        });
       }
-    } else {
-      userPermissions = {
-        user_management: "rw",
-        role_management: "rw",
-        ship_of_interest: "rw",
-        geofence: "rw",
-        alerts: "rw",
-        voyage: "rw",
-      };
     }
 
     const hashedPassword = await this.encryptionService.hashPassword(password);

@@ -130,8 +130,15 @@ export class OrganizationService {
       );
     }
 
-    const userPermissions: Record<string, string> = {};
-    const roles = ["656eb5478db27e4db5b1b4c0"];
+    const userPermissions: Record<string, string> = {
+      user_management: "rw",
+      role_management: "rw",
+      ship_of_interest: "rw",
+      geofence: "rw",
+      alerts: "rw",
+      voyage: "rw",
+    };
+    const roles = ["66cc8aabd6cda509ca031520"];
 
     for (const roleId of roles) {
       const role = await this.rolesModel.findById(roleId).exec();
@@ -410,3 +417,4 @@ export class OrganizationService {
     return dataUpdate;
   }
 }
+
